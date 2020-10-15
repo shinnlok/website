@@ -35,7 +35,7 @@ export default class CommentsWidget extends preact.Component {
         let ratingSum = 0;
 
         const comment_elements = this.state.comments.map((c) => {
-            if (c.additional.rating) {
+            if (c.additional?.rating) {
                 ratingCount++;
                 ratingSum += Number(c.additional.rating);
             }
@@ -65,15 +65,15 @@ export default class CommentsWidget extends preact.Component {
                             <Text id="no-comments" />
                         </p>
                     ) : (
-                        comment_elements
-                    )}
+                        <div>
+                            <CommentSummary
+                                ratingCount={ratingCount}
+                                ratingSum={ratingSum}
+                                reviewCount={this.state.comments.length}
+                            />
 
-                    {ratingCount > 0 && (
-                        <CommentSummary
-                            ratingCount={ratingCount}
-                            ratingSum={ratingSum}
-                            reviewCount={this.state.comments.length}
-                        />
+                            {comment_elements}
+                        </div>
                     )}
 
                     <CommentForm allow_rating={this.props.allow_rating} displayWarning={this.props.displayWarning} />
@@ -299,7 +299,7 @@ export class CommentSummary extends preact.Component {
         const json = {
             '@context': 'http://schema.org',
             '@type': 'Organization',
-            '@id': parts[2],
+            '@id': document.location.href + '#company',
             aggregateRating: {
                 '@type': 'AggregateRating',
                 ratingCount: this.props.ratingCount,
@@ -317,11 +317,43 @@ export class CommentSummary extends preact.Component {
     }
 
     render() {
+        if (this.props.reviewCount === 0) {
+            return;
+        }
+
         this.averageRating = (this.props.ratingSum / this.props.ratingCount).toFixed(2);
 
         return (
-            <div style="text-align: right; margin-bottom: 15px;">
-                <Text id="average-rating" /> {this.averageRating}
+            <div className="comments-summary">
+                <ol>
+                    <li>
+                        <h3>
+                            <Text id="total" />
+                        </h3>
+                        <span className="primary-content">{this.props.reviewCount}</span>
+                    </li>
+                    <li>
+                        <h3>
+                            <Text id="average-rating" />
+                        </h3>
+
+                        {this.props.ratingCount > 0 ? (
+                            <div>
+                                <span className="primary-content">{this.averageRating}</span>
+
+                                <Text
+                                    id="from-x-reviewers"
+                                    fields={{ count: this.props.ratingCount }}
+                                    plural={this.props.ratingCount}
+                                />
+                            </div>
+                        ) : (
+                            <span className="primary-content">
+                                <Text id="no-ratings" />
+                            </span>
+                        )}
+                    </li>
+                </ol>
             </div>
         );
     }
